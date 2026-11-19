@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Today at a glance – The Corner Café dashboard</title>
+  <!-- Design system: Bulma v1 from its official CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <style>
+    /* Small layout adjustments only – everything else is Bulma */
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 3px solid #14161a !important; outline-offset: 2px; }
+    .skip-link { position: absolute; left: -9999px; top: 0; z-index: 100; }
+    .skip-link:focus { left: .5rem; top: .5rem; background: #fff; padding: .5rem 1rem; }
+    .photo-box { background: #dfe1e5; border-radius: 6px; height: 140px; display: flex; align-items: center; justify-content: center; color: #4a4f57; }
+    .bar-row progress { margin-bottom: 0 !important; height: .75rem; }
+    .bar-row { padding: .6rem 0; border-bottom: 1px solid #e5e7eb; }
+    .bar-row:last-child { border-bottom: 0; }
+    .table td, .table th { vertical-align: middle; }
+    .table progress { min-width: 70px; margin: 0 !important; height: .6rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+    main { min-height: 70vh; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- ===================== APP SHELL: HEADER + NAVIGATION ===================== -->
+  <header>
+    <nav class="navbar has-shadow" aria-label="Main navigation">
+      <div class="navbar-brand">
+        <a class="navbar-item has-text-weight-bold" href="#overview">The Corner Café</a>
+        <button type="button" class="navbar-burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="main-menu">
+          <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="navbar-menu" id="main-menu">
+        <div class="navbar-start">
+          <a class="navbar-item" href="#overview" data-nav="overview">Overview</a>
+          <a class="navbar-item" href="#sales" data-nav="sales">Sales by item</a>
+          <a class="navbar-item" href="#stock" data-nav="stock">Stock levels</a>
+        </div>
+        <div class="navbar-end">
+          <div class="navbar-item"><button type="button" class="button is-white not-built">Settings</button></div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main" class="section px-4 py-5">
+    <div class="container" style="max-width: 960px;">
+
+      <!-- ===================== SCREEN 1: OVERVIEW ===================== -->
+      <section id="screen-overview" data-screen="overview" aria-labelledby="h-overview" hidden>
+        <h1 id="h-overview" class="title is-3" tabindex="-1">Today at a glance</h1>
+        <p class="subtitle is-6">Thursday 19 November · updated at 2:15pm</p>
+
+        <div class="columns is-mobile is-multiline">
+          <div class="column is-12-mobile is-4-tablet">
+            <div class="box">
+              <h2 class="heading has-text-grey-dark">Sales so far today</h2>
+              <p class="stat-value" id="stat-sales"></p>
+            </div>
+          </div>
+          <div class="column is-6-mobile is-4-tablet">
+            <div class="box">
+              <h2 class="heading has-text-grey-dark">Orders</h2>
+              <p class="stat-value" id="stat-orders"></p>
+            </div>
+          </div>
+          <div class="column is-6-mobile is-4-tablet">
+            <div class="box">
+              <h2 class="heading has-text-grey-dark">Busiest hour</h2>
+              <p class="stat-value" id="stat-busiest"></p>
+              <p class="is-size-7" id="stat-busiest-note"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="notification is-info is-light">
+          <p class="mb-3" id="overview-best"></p>
+          <a class="button is-dark" href="#sales">See sales by item</a>
+        </div>
+
+        <div class="notification is-warning is-light">
+          <p class="mb-3" id="overview-stock"></p>
+          <a class="button is-dark" href="#stock">Check stock levels</a>
+        </div>
+
+        <div class="box">
+          <h2 class="title is-5">Orders by hour today</h2>
+          <ul id="hourly-list"></ul>
+        </div>
+
+        <button type="button" class="button not-built">Download today's report</button>
+      </section>
+
+      <!-- ===================== SCREEN 2: SALES BY ITEM ===================== -->
+      <section id="screen-sales" data-screen="sales" aria-labelledby="h-sales" hidden>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ul><li><a href="#overview">Overview</a></li><li class="is-active"><a href="#sales" aria-current="page">Sales by item</a></li></ul>
+        </nav>
+        <h1 id="h-sales" class="title is-3" tabindex="-1">Sales by item</h1>
+
+        <div class="box">
+          <fieldset class="field">
+            <legend class="label">Time period</legend>
+            <div class="buttons has-addons" id="period-buttons">
+              <button type="button" class="button" data-period="yesterday" aria-pressed="true">Yesterday</button>
+              <button type="button" class="button" data-period="week" aria-pressed="false">Last 7 days</button>
+            </div>
+          </fieldset>
+          <div class="field">
+            <label class="label" for="sort-select">Sort by</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select id="sort-select">
+                  <option value="units">Most sold (number sold)</option>
+                  <option value="revenue">Highest takings (£)</option>
+                  <option value="name">Name (A to Z)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="title is-5" id="sales-list-heading"></h2>
+        <p class="is-size-7 mb-3">Select an item to see its last 7 days.</p>
+        <p class="is-sr-only" aria-live="polite" id="sales-status"></p>
+        <ol class="box" id="sales-list" aria-labelledby="sales-list-heading"></ol>
+
+        <div class="buttons">
+          <a class="button is-dark" href="#stock">Check stock levels</a>
+          <button type="button" class="button not-built">Export as spreadsheet</button>
+        </div>
+      </section>
+
+      <!-- ===================== SCREEN 3: ITEM DETAILS ===================== -->
+      <section id="screen-item" data-screen="item" aria-labelledby="h-item" hidden>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#sales">Sales by item</a></li>
+            <li class="is-active"><a href="#" aria-current="page" id="crumb-item">Item</a></li>
+          </ul>
+        </nav>
+        <div id="item-content"></div>
+      </section>
+
+      <!-- ===================== SCREEN 4: STOCK LEVELS ===================== -->
+      <section id="screen-stock" data-screen="stock" aria-labelledby="h-stock" hidden>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ul><li><a href="#overview">Overview</a></li><li class="is-active"><a href="#stock" aria-current="page">Stock levels</a></li></ul>
+        </nav>
+        <h1 id="h-stock" class="title is-3" tabindex="-1">Stock levels</h1>
+        <p class="subtitle is-6">Servings left, counted at close yesterday (Wednesday 18 November)</p>
+
+        <div class="notification is-warning is-light" id="stock-summary"></div>
+
+        <div class="box">
+          <div class="field">
+            <label class="label" for="stock-search">Search stock</label>
+            <div class="field has-addons mb-0">
+              <div class="control is-expanded">
+                <input class="input" type="search" id="stock-search" placeholder="For example, scone" aria-describedby="stock-search-help" autocomplete="off">
+              </div>
+              <div class="control">
+                <button type="button" class="button" id="stock-search-clear">Clear</button>
+              </div>
+            </div>
+            <p class="help" id="stock-search-help">Type part of an item name.</p>
+          </div>
+          <div class="field">
+            <label class="checkbox" for="stock-low-only">
+              <input type="checkbox" id="stock-low-only">
+              Show only items that need reordering
+            </label>
+          </div>
+        </div>
+
+        <p class="is-sr-only" aria-live="polite" id="stock-status"></p>
+        <div class="table-container">
+          <table class="table is-fullwidth is-hoverable">
+            <caption class="has-text-left has-text-weight-semibold mb-2">Stock for all menu items, items that need reordering first</caption>
+            <thead>
+              <tr><th scope="col">Item</th><th scope="col">Left</th><th scope="col" class="is-hidden-mobile">Reorder at</th><th scope="col">Status</th></tr>
+            </thead>
+            <tbody id="stock-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ===================== "NOT IN PROTOTYPE YET" MESSAGE (MODAL) ===================== -->
+  <div class="modal" id="not-built-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-background" data-close></div>
+    <div class="modal-content px-4">
+      <div class="box">
+        <h2 class="title is-5" id="modal-title">Coming later</h2>
+        <p class="mb-4">This part isn't in the prototype yet.</p>
+        <button type="button" class="button is-dark" id="modal-close" data-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer py-5">
+    <div class="content has-text-centered is-size-7">
+      <p>Prototype for user testing · all figures are made up.</p>
+      <p><a href="#overview" id="reset-link">Reset prototype</a></p>
+    </div>
+  </footer>
+
+  <script>
+    /* ===================== FAKE DATA (in memory only) ===================== */
+    var DAYS = ['Thu 12 Nov', 'Fri 13 Nov', 'Sat 14 Nov', 'Sun 15 Nov', 'Mon 16 Nov', 'Tue 17 Nov', 'Wed 18 Nov'];
+    var DAY_FACTOR = [1.0, 1.1, 1.35, 1.2, 0.85, 0.9, 0.95];
+
+    // name, category, price (£), typical daily sales, servings left, reorder level
+    var MENU = [
+      ['Flat white', 'Coffee', 3.40, 38, 64, 30],
+      ['Latte', 'Coffee', 3.50, 34, 58, 30],
+      ['Cappuccino', 'Coffee', 3.40, 28, 55, 25],
+      ['Americano', 'Coffee', 2.90, 30, 70, 25],
+      ['Espresso', 'Coffee', 2.30, 10, 70, 15],
+      ['Mocha', 'Coffee', 3.80, 14, 26, 12],
+      ['Oat milk latte', 'Coffee', 3.80, 22, 8, 20],
+      ['English breakfast tea', 'Tea', 2.40, 16, 120, 30],
+      ['Earl Grey tea', 'Tea', 2.40, 9, 45, 20],
+      ['Peppermint tea', 'Tea', 2.50, 8, 38, 15],
+      ['Chai latte', 'Tea', 3.60, 15, 6, 10],
+      ['Green tea', 'Tea', 2.50, 6, 30, 10],
+      ['Victoria sponge slice', 'Cake', 3.50, 12, 10, 6],
+      ['Lemon drizzle slice', 'Cake', 3.30, 14, 0, 6],
+      ['Carrot cake slice', 'Cake', 3.60, 11, 3, 6],
+      ['Chocolate brownie', 'Cake', 3.00, 18, 22, 10],
+      ['Fruit scone with jam', 'Cake', 2.80, 13, 4, 8],
+      ['Cheese and pickle sandwich', 'Sandwich', 5.20, 10, 12, 6],
+      ['Ham and mustard sandwich', 'Sandwich', 5.50, 9, 9, 6],
+      ['Tuna mayo sandwich on brown', 'Sandwich', 5.40, 8, 2, 5]
+    ];
+
+    // Seeded random numbers so the "realistic" figures are the same every time
+    var seed = 20261118;
+    function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+    var ITEMS = MENU.map(function (m, i) {
+      var daily = DAY_FACTOR.map(function (f) { return Math.max(0, Math.round(m[3] * f * (0.85 + rnd() * 0.3))); });
+      return { id: 'item-' + (i + 1), name: m[0], category: m[1], price: m[2], daily: daily, stock: m[4], reorder: m[5] };
+    });
+
+    // Today so far (7am to 2:15pm)
+    var HOURS = [
+      { label: '7am–8am', orders: 6 }, { label: '8am–9am', orders: 19 }, { label: '9am–10am', orders: 17 },
+      { label: '10am–11am', orders: 13 }, { label: '11am–12pm', orders: 12 }, { label: '12pm–1pm', orders: 22 },
+      { label: '1pm–2pm', orders: 18 }, { label: '2pm–2:15pm', orders: 4 }
+    ];
+    var TODAY_SALES = 578.60;
+
+    /* ===================== STATE (what the user has chosen) ===================== */
+    var DEFAULT_STATE = { period: 'yesterday', sort: 'units', stockSearch: '', lowOnly: false };
+    var state = Object.assign({}, DEFAULT_STATE);
+
+    /* ===================== HELPERS ===================== */
+    var gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
+    function $(id) { return document.getElementById(id); }
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function unitsFor(item, period) { return period === 'yesterday' ? item.daily[6] : item.daily.reduce(function (a, b) { return a + b; }, 0); }
+    function stockStatus(item) {
+      if (item.stock === 0) return { rank: 0, text: 'Out of stock', cls: 'is-danger' };
+      if (item.stock <= item.reorder) return { rank: 1, text: 'Low', cls: 'is-warning' };
+      return { rank: 2, text: 'OK', cls: 'is-success' };
+    }
+    function bestSeller(period) { return ITEMS.slice().sort(function (a, b) { return unitsFor(b, period) - unitsFor(a, period); })[0]; }
+    function needReorder() { return ITEMS.filter(function (i) { return stockStatus(i).rank < 2; }); }
+
+    /* ===================== RENDER: SCREEN 1 OVERVIEW ===================== */
+    function renderOverview() {
+      var orders = HOURS.reduce(function (a, h) { return a + h.orders; }, 0);
+      var busiest = HOURS.slice().sort(function (a, b) { return b.orders - a.orders; })[0];
+      var maxOrders = busiest.orders;
+      $('stat-sales').textContent = gbp.format(TODAY_SALES);
+      $('stat-orders').textContent = orders;
+      $('stat-busiest').textContent = busiest.label;
+      $('stat-busiest-note').textContent = busiest.orders + ' orders';
+      var best = bestSeller('yesterday');
+      $('overview-best').innerHTML = 'Want to know what sold best yesterday? Compare every item on the sales screen.';
+      var low = needReorder();
+      $('overview-stock').textContent = low.length + ' items need reordering.';
+      $('hourly-list').innerHTML = HOURS.map(function (h) {
+        return '<li class="bar-row"><div class="is-flex is-justify-content-space-between"><span>' + h.label + '</span><span>' + h.orders + ' orders</span></div>' +
+          '<progress class="progress is-dark is-small" value="' + h.orders + '" max="' + maxOrders + '" aria-hidden="true"></progress></li>';
+      }).join('');
+    }
+
+    /* ===================== RENDER: SCREEN 2 SALES BY ITEM ===================== */
+    function renderSales() {
+      var period = state.period;
+      document.querySelectorAll('#period-buttons .button').forEach(function (b) {
+        var on = b.dataset.period === period;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.classList.toggle('is-dark', on);
+      });
+      $('sort-select').value = state.sort;
+
+      var rows = ITEMS.map(function (i) { var u = unitsFor(i, period); return { item: i, units: u, revenue: u * i.price }; });
+      rows.sort(function (a, b) {
+        if (state.sort === 'revenue') return b.revenue - a.revenue;
+        if (state.sort === 'name') return a.item.name.localeCompare(b.item.name);
+        return b.units - a.units;
+      });
+      var best = bestSeller(period);
+      var showRevenue = state.sort === 'revenue';
+      var max = Math.max.apply(null, rows.map(function (r) { return showRevenue ? r.revenue : r.units; }));
+      var periodText = period === 'yesterday' ? 'yesterday (Wednesday 18 November)' : 'in the last 7 days (12 to 18 November)';
+      $('sales-list-heading').textContent = 'Items sold ' + periodText;
+
+      $('sales-list').innerHTML = rows.map(function (r) {
+        var val = showRevenue ? r.revenue : r.units;
+        var tag = r.item === best ? ' <span class="tag is-info is-light">Best seller</span>' : '';
+        return '<li class="bar-row">' +
+          '<div class="is-flex is-justify-content-space-between is-align-items-center mb-1" style="gap:.5rem">' +
+            '<span><a href="#' + r.item.id + '">' + esc(r.item.name) + '</a>' + tag + '</span>' +
+            '<span class="has-text-right" style="white-space:nowrap">' + r.units + ' sold · ' + gbp.format(r.revenue) + '</span>' +
+          '</div>' +
+          '<progress class="progress is-dark is-small" value="' + val + '" max="' + max + '" aria-hidden="true"></progress>' +
+        '</li>';
+      }).join('');
+    }
+
+    /* ===================== RENDER: SCREEN 3 ITEM DETAILS ===================== */
+    function renderItem(id) {
+      var item = ITEMS.filter(function (i) { return i.id === id; })[0];
+      var box = $('item-content');
+      if (!item) {
+        $('crumb-item').textContent = 'Item not found';
+        box.innerHTML = '<h1 id="h-item" class="title is-3" tabindex="-1">Item not found</h1>' +
+          '<div class="notification is-danger is-light">We couldn\'t find that menu item. It may have been typed incorrectly. Go back to the sales list and choose an item from there.</div>' +
+          '<a class="button is-dark" href="#sales">Back to sales by item</a>';
+        return 'Item not found';
+      }
+      var total = unitsFor(item, 'week');
+      var max = Math.max.apply(null, item.daily);
+      var st = stockStatus(item);
+      $('crumb-item').textContent = item.name;
+      box.innerHTML =
+        '<h1 id="h-item" class="title is-3" tabindex="-1">' + esc(item.name) + '</h1>' +
+        '<p class="mb-4"><span class="tag is-light">' + item.category + '</span> <span class="ml-2">' + gbp.format(item.price) + ' each</span></p>' +
+        '<div class="columns">' +
+          '<div class="column is-4"><div class="photo-box" aria-hidden="true">Photo</div></div>' +
+          '<div class="column">' +
+            '<div class="columns is-mobile is-multiline">' +
+              stat('Sold in last 7 days', total) +
+              stat('Average per day', (total / 7).toFixed(1)) +
+              stat('Takings in last 7 days', gbp.format(total * item.price)) +
+              stat('Servings left', item.stock + ' <span class="tag ' + st.cls + ' is-light is-size-7">' + st.text + '</span>') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<h2 class="title is-5">Last 7 days</h2>' +
+        '<div class="table-container"><table class="table is-fullwidth is-striped">' +
+          '<caption class="is-sr-only">Daily sales of ' + esc(item.name) + ', 12 to 18 November</caption>' +
+          '<thead><tr><th scope="col">Day</th><th scope="col">Sold</th><th scope="col">Takings</th><th scope="col"><span class="is-sr-only">Chart</span></th></tr></thead><tbody>' +
+          item.daily.map(function (u, d) {
+            return '<tr' + (d === 6 ? ' class="has-background-light has-text-weight-semibold"' : '') + '><th scope="row">' + DAYS[d] + (d === 6 ? ' (yesterday)' : '') + '</th><td>' + u + '</td><td>' + gbp.format(u * item.price) + '</td>' +
+              '<td><progress class="progress is-dark is-small" value="' + u + '" max="' + max + '" aria-hidden="true"></progress></td></tr>';
+          }).join('') +
+        '</tbody></table></div>' +
+        '<div class="buttons">' +
+          '<a class="button is-dark" href="#sales">Back to sales by item</a>' +
+          '<a class="button" href="#stock">See stock levels</a>' +
+          '<button type="button" class="button not-built">Edit item</button>' +
+        '</div>';
+      return item.name;
+    }
+    function stat(label, value) {
+      return '<div class="column is-6"><p class="heading has-text-grey-dark">' + label + '</p><p class="title is-5">' + value + '</p></div>';
+    }
+
+    /* ===================== RENDER: SCREEN 4 STOCK LEVELS ===================== */
+    function renderStock() {
+      var low = needReorder();
+      var out = low.filter(function (i) { return i.stock === 0; }).length;
+      $('stock-summary').innerHTML = '<strong>' + low.length + ' items need reordering:</strong> ' + out + ' out of stock and ' + (low.length - out) + ' running low.';
+      $('stock-search').value = state.stockSearch;
+      $('stock-low-only').checked = state.lowOnly;
+
+      var q = state.stockSearch.trim().toLowerCase();
+      var list = ITEMS.filter(function (i) {
+        if (state.lowOnly && stockStatus(i).rank === 2) return false;
+        return !q || i.name.toLowerCase().indexOf(q) !== -1;
+      }).sort(function (a, b) {
+        var d = stockStatus(a).rank - stockStatus(b).rank;
+        return d !== 0 ? d : (a.stock / a.reorder) - (b.stock / b.reorder);
+      });
+
+      var input = $('stock-search'), help = $('stock-search-help');
+      if (q && list.length === 0) {
+        input.classList.add('is-danger'); input.setAttribute('aria-invalid', 'true');
+        help.className = 'help is-danger';
+        help.textContent = 'No items match "' + state.stockSearch.trim() + '"' + (state.lowOnly ? ' among items that need reordering' : '') + '. Check the spelling, try a shorter word, or select Clear.';
+      } else {
+        input.classList.remove('is-danger'); input.removeAttribute('aria-invalid');
+        help.className = 'help'; help.textContent = 'Type part of an item name.';
+      }
+
+      $('stock-body').innerHTML = list.length ? list.map(function (i) {
+        var st = stockStatus(i);
+        var action = st.rank < 2 ? '<br><button type="button" class="button is-small mt-1 not-built">Reorder<span class="is-sr-only"> ' + esc(i.name) + '</span></button>' : '';
+        return '<tr><th scope="row"><a href="#' + i.id + '">' + esc(i.name) + '</a></th><td>' + i.stock + '</td><td class="is-hidden-mobile">' + i.reorder + '</td>' +
+          '<td><span class="tag ' + st.cls + ' is-light">' + st.text + '</span>' + action + '</td></tr>';
+      }).join('') : '<tr><td colspan="4">No items to show.</td></tr>';
+      $('stock-status').textContent = list.length + ' items shown';
+    }
+
+    /* ===================== NAVIGATION (hash-based, so browser Back works) ===================== */
+    var firstLoad = true;
+    function route() {
+      var hash = location.hash.replace('#', '') || 'overview';
+      var screen = hash.indexOf('item-') === 0 ? 'item' : hash;
+      if (['overview', 'sales', 'item', 'stock'].indexOf(screen) === -1) screen = 'overview';
+
+      var title = { overview: 'Today at a glance', sales: 'Sales by item', stock: 'Stock levels' }[screen];
+      if (screen === 'overview') renderOverview();
+      if (screen === 'sales') renderSales();
+      if (screen === 'stock') renderStock();
+      if (screen === 'item') title = renderItem(hash);
+      document.title = title + ' – The Corner Café dashboard';
+
+      document.querySelectorAll('[data-screen]').forEach(function (s) { s.hidden = s.dataset.screen !== screen; });
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        var on = a.dataset.nav === screen || (screen === 'item' && a.dataset.nav === 'sales');
+        a.classList.toggle('is-active', on);
+        if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      });
+      closeMenu();
+      if (!firstLoad) {
+        window.scrollTo(0, 0);
+        var h = document.querySelector('[data-screen="' + screen + '"] h1');
+        if (h) h.focus();
+      }
+      firstLoad = false;
+    }
+    window.addEventListener('hashchange', route);
+
+    /* ===================== CONTROLS ===================== */
+    // Mobile menu
+    var burger = $('burger'), menu = $('main-menu');
+    burger.addEventListener('click', function () {
+      var open = !menu.classList.contains('is-active');
+      menu.classList.toggle('is-active', open); burger.classList.toggle('is-active', open);
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    });
+    function closeMenu() {
+      menu.classList.remove('is-active'); burger.classList.remove('is-active');
+      burger.setAttribute('aria-expanded', 'false'); burger.setAttribute('aria-label', 'Open menu');
+    }
+
+    // Sales: period and sort
+    $('period-buttons').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-period]'); if (!b) return;
+      state.period = b.dataset.period; renderSales();
+      $('sales-status').textContent = 'Showing ' + (state.period === 'yesterday' ? 'yesterday' : 'the last 7 days');
+    });
+    $('sort-select').addEventListener('change', function (e) {
+      state.sort = e.target.value; renderSales();
+      $('sales-status').textContent = 'List sorted by ' + e.target.options[e.target.selectedIndex].text;
+    });
+
+    // Stock: search and filter
+    $('stock-search').addEventListener('input', function (e) { state.stockSearch = e.target.value; renderStock(); });
+    $('stock-search-clear').addEventListener('click', function () { state.stockSearch = ''; renderStock(); $('stock-search').focus(); });
+    $('stock-low-only').addEventListener('change', function (e) { state.lowOnly = e.target.checked; renderStock(); });
+
+    // Reset prototype: clear choices and go back to screen 1
+    $('reset-link').addEventListener('click', function (e) {
+      e.preventDefault();
+      state = Object.assign({}, DEFAULT_STATE);
+      if (location.hash === '#overview') route(); else location.hash = 'overview';
+    });
+
+    /* ===================== "NOT IN PROTOTYPE YET" MODAL ===================== */
+    var modal = $('not-built-modal'), lastFocus = null;
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.not-built')) { lastFocus = e.target.closest('.not-built'); modal.classList.add('is-active'); $('modal-close').focus(); }
+      else if (e.target.closest('[data-close]')) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!modal.classList.contains('is-active')) return;
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Tab') { e.preventDefault(); $('modal-close').focus(); }
+    });
+    function closeModal() { modal.classList.remove('is-active'); if (lastFocus) lastFocus.focus(); }
+
+    route();
+  </script>
+</body>
+</html>
