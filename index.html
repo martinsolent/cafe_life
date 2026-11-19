@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Today at a glance – The Corner Café dashboard</title>
+  <title>Martin is cool – The Corner Café dashboard</title>
   <!-- Design system: Bulma v1 from its official CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
   <style>
@@ -52,7 +52,7 @@
 
       <!-- ===================== SCREEN 1: OVERVIEW ===================== -->
       <section id="screen-overview" data-screen="overview" aria-labelledby="h-overview" hidden>
-        <h1 id="h-overview" class="title is-3" tabindex="-1">Today at a glance</h1>
+        <h1 id="h-overview" class="title is-3" tabindex="-1">Martin is cool</h1>
         <p class="subtitle is-6">Thursday 19 November · updated at 2:15pm</p>
 
         <div class="columns is-mobile is-multiline">
@@ -422,7 +422,7 @@
       var screen = hash.indexOf('item-') === 0 ? 'item' : hash;
       if (['overview', 'sales', 'item', 'stock'].indexOf(screen) === -1) screen = 'overview';
 
-      var title = { overview: 'Today at a glance', sales: 'Sales by item', stock: 'Stock levels' }[screen];
+      var title = { overview: 'Martin is cool', sales: 'Sales by item', stock: 'Stock levels' }[screen];
       if (screen === 'overview') renderOverview();
       if (screen === 'sales') renderSales();
       if (screen === 'stock') renderStock();
